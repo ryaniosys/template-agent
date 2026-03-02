@@ -39,6 +39,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Sensitive term deny-list (local only)
+.sensitive-terms
+
 # Build artifacts
 *.html
 *.pdf

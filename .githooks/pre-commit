@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block commits containing sensitive terms
+# Setup: git config core.hooksPath .githooks
+
+DENY_FILE=".sensitive-terms"
+
+if [ ! -f "$DENY_FILE" ]; then
+  exit 0
+fi
+
+STAGED_DIFF=$(git diff --cached --diff-filter=ACMR)
+
+while IFS= read -r pattern; do
+  # Skip empty lines and comments
+  [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
+  if echo "$STAGED_DIFF" | grep -qiE "$pattern"; then
+    echo "ERROR: Staged changes match sensitive pattern: $pattern"
+    echo "Remove the sensitive content before committing."
+    echo "Patterns defined in $DENY_FILE"
+    exit 1
+  fi
+done < "$DENY_FILE"
+
+exit 0
