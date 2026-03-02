@@ -9,6 +9,16 @@ Thanks for your interest in contributing! This guide covers the basics.
 3. **Make your changes** following the guidelines in this document
 4. **Open a pull request** against `main`
 
+## Setup
+
+Enable the pre-commit hook that guards against accidental sensitive data leaks:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This runs `.githooks/pre-commit` on each commit, checking staged changes against a local deny-list (`.sensitive-terms`). Create your own `.sensitive-terms` file with patterns to block — see the hook script for format details.
+
 ## Branch Naming
 
 | Prefix | Use |
