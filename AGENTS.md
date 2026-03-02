@@ -31,6 +31,17 @@ When updating skill instructions, style guides, or AGENTS.md based on learnings:
 - **Don't overfit** — one example doesn't warrant a detailed rule
 - **Prefer principles over prescriptions**
 
+## Permission Settings
+
+**All permission changes go in `.claude/settings.local.json`** (gitignored, user-specific) — never modify the committed `.claude/settings.json`.
+
+| File | Committed | Purpose |
+|------|-----------|---------|
+| `.claude/settings.json` | Yes | Shared deny rules (secrets protection) |
+| `.claude/settings.local.json` | No (gitignored) | User-specific allow/deny, MCP servers, additional directories |
+
+The committed `settings.json` hard-blocks `.env` file reads. Add your repo-specific permissions (MCP tool allows, directory access, etc.) to `settings.local.json`.
+
 ## Data Privacy
 
 **NEVER read `.env`, `.env.mcp`, or any file containing secrets/tokens.** If the user needs to edit these files, open them with `xdg-open` so the user can edit manually. Reading secrets into conversation context exposes them irreversibly.
