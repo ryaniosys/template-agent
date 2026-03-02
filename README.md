@@ -24,9 +24,15 @@ Cookiecutter template for Claude Code agent repositories. Distills patterns from
    # Fill in your values
    ```
 
-4. **Add skills:** Create `.claude/skills/{name}/SKILL.md` — see the example skill for structure.
+4. **Set up Excalidraw rendering** (one-time):
+   ```bash
+   cd .claude/skills/excalidraw-diagram/references
+   uv sync && uv run playwright install chromium
+   ```
 
-5. **Register in agent-atlas:** Add your repo to `agent-atlas/content/current.yaml` so it's tracked in architecture snapshots.
+5. **Add skills:** Create `.claude/skills/{name}/SKILL.md` — see the example skill for structure.
+
+6. **Register in agent-atlas:** Add your repo to `agent-atlas/content/current.yaml` so it's tracked in architecture snapshots.
 
 ## What's Included
 
@@ -37,6 +43,7 @@ Cookiecutter template for Claude Code agent repositories. Distills patterns from
 | `PRD.md` | Product vision and roadmap template |
 | `.claude/settings.json` | Hard-deny rules blocking secret file reads (committed, shared) |
 | `.claude/settings.local.json` | User-specific allows/denies (gitignored, create your own) |
+| `.claude/skills/excalidraw-diagram/` | Visual diagramming — Excalidraw JSON to PNG via Playwright |
 | `.claude/skills/example-skill/` | Annotated skill template with all standard sections |
 | `config.template.yaml` | Configurable settings schema |
 | `.env.example` | Environment variable template |
@@ -115,3 +122,4 @@ Official Claude Code docs and community guides that informed these patterns:
 - [Settings and Permissions Deep Dive](https://deepwiki.com/FlorianBruniaux/claude-code-ultimate-guide/4.2-settings-and-permissions-files) — committed vs. local, team workflows
 - [Developer's Guide to settings.json](https://www.eesel.ai/blog/settings-json-claude-code) — practical configuration patterns
 - [Agent-Atlas Best Practices Blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md) — our living conventions doc with audit matrix
+- [coleam00/excalidraw-diagram-skill](https://github.com/coleam00/excalidraw-diagram-skill) — upstream Excalidraw diagram skill (adapted for our conventions)

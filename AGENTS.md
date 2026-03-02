@@ -102,6 +102,7 @@ Run `/help` to see all available skills.
 
 | Skill | Trigger | Description |
 |-------|---------|-------------|
+| `/excalidraw-diagram` | "create a diagram", "architecture diagram" | Generate Excalidraw diagrams rendered to PNG via Playwright |
 | `/example-skill` | "example trigger phrase" | Example skill — delete or replace |
 
 ## MCP Servers
