@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(path:.env)",
+      "Read(path:.env.mcp)",
+      "Bash(cat .env*)",
+      "Bash(head .env*)",
+      "Bash(tail .env*)",
+      "Bash(source .env*)"
+    ]
+  }
+}

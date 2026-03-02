@@ -1,0 +1,45 @@
+# Secrets & credentials
+.env
+.env.*
+!.env.example
+.env.mcp
+!.env.mcp.template
+
+# Local configuration
+config.local.yaml
+*.local.*
+
+# Plans (ephemeral)
+plans/
+!plans/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Data & databases
+data/
+*.sqlite
+*.db
+
+# Customer data (NEVER commit)
+# Keep in ~/Documents/ (not version-controlled)
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+*.html
+*.pdf
+!docs/**/*.html

@@ -1,0 +1,21 @@
+# Agent Configuration Template
+# Copy to config.local.yaml and customize (gitignored)
+#
+# cp config.template.yaml config.local.yaml
+
+# Agent identity
+agent:
+  name: "my-agent"          # lowercase, hyphenated
+  purpose: "Brief description of this agent's role"
+
+# External folder paths (parametrize all user-specific paths here)
+# Skills read these via AGENTS.md Configuration section
+paths:
+  # output_folder: ~/Documents/...
+  # data_folder: ~/Documents/...
+
+# Integration toggles
+integrations:
+  # hubspot: false
+  # ms365: false
+  # linear: false

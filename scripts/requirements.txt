@@ -1,0 +1,5 @@
+# Add Python dependencies here
+# pip packages installed into /tmp/{repo-name}-venv by run_in_venv.sh
+#
+# httpx
+# pyyaml
