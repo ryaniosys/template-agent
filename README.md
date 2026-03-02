@@ -1,5 +1,8 @@
 # template-agent
 
+> [!WARNING]
+> **Experimental** — This project is under active development and subject to breaking changes, refactoring, and restructuring without notice. It is provided as-is with no warranty of any kind. Use at your own risk.
+
 Cookiecutter template for Claude Code agent repositories. Distills patterns from the [ryaniosys multi-agent ecosystem](https://github.com/ryaniosys/agent-atlas).
 
 ## Quick Start
