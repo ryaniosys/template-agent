@@ -121,11 +121,25 @@ Configured in `.mcp.json`. Secrets in `.env.mcp` (gitignored).
 |--------|---------|-------------------|
 | — | — | — |
 
+## Session Lifecycle
+
+Session hooks (`.claude/hooks.json`) manage ephemeral skill data:
+
+- **SessionStart:** Checks for crash recovery (stale `.heartbeat`), writes new heartbeat
+- **SessionEnd:** Flushes `/tmp/{repo-name}-session/` artifacts to `data_dir`, clears heartbeat
+
+**Where skills write artifacts:**
+- During session: `/tmp/{repo-name}-session/{skill-name}/` (fast, volatile)
+- For crash-critical data: `<data_dir>/{skill-name}/` directly (persistent)
+
+The `data_dir` is configured in `config.local.yaml`. Point it to a file-synced folder for cross-machine availability. See the README for the full pattern.
+
 ## Quick Reference
 
 | File | Purpose |
 |------|---------|
 | `config.local.yaml` | User-specific settings (gitignored) |
+| `.claude/hooks.json` | Session lifecycle hooks (heartbeat, flush) |
 | `.env` | API keys and secrets (gitignored) |
 | `.mcp.json` | MCP server configurations |
 | `instructions/INSTRUCTIONS.md` | Detailed workflow instructions |

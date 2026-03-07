@@ -14,6 +14,13 @@ paths:
   # output_folder: ~/Documents/...
   # data_folder: ~/Documents/...
 
+# Session lifecycle data directory.
+# Skills write ephemeral state here (session logs, decision logs, snapshots).
+# Point this to a file-synced folder (e.g., Dropbox, iCloud, OneDrive) so
+# data survives across machines. Falls back to repo-local data/ if unset.
+# Structure: <data_dir>/<skill-name>/session-YYYYMMDD.md, decisions.md, etc.
+data_dir: # ~/Documents/my-agent-data
+
 # Integration toggles
 integrations:
   # hubspot: false
