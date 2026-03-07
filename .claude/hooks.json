@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "bash scripts/hook_session_lifecycle.sh start",
+        "description": "Check for crash recovery and write session heartbeat"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "command": "bash scripts/hook_session_lifecycle.sh end",
+        "description": "Flush ephemeral artifacts to data_dir and clear heartbeat"
+      }
+    ]
+  }
+}

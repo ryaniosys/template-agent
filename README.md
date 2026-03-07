@@ -45,6 +45,8 @@ Cookiecutter template for Claude Code agent repositories. Distills patterns from
 | `.env.example` | Environment variable template |
 | `.gitignore` | Comprehensive ignore rules (secrets, data, caches) |
 | `scripts/run_in_venv.sh` | Python venv runner (auto-creates `/tmp/{repo}-venv`) |
+| `scripts/hook_session_lifecycle.sh` | Session lifecycle hook (heartbeat + flush) |
+| `.claude/hooks.json` | SessionStart/SessionEnd hook configuration |
 | `instructions/INSTRUCTIONS.md` | Detailed workflow docs (progressive disclosure layer 2) |
 | `docs/solutions/` | Knowledge base scaffold with category structure |
 | `tasks/lessons.md` | Self-improvement loop log |
@@ -108,6 +110,39 @@ This template follows the 11 conventions documented in the [agent-atlas best-pra
 9. MCP Integration (`.mcp.json` + `.env.mcp`)
 10. Documentation Hygiene (sharding, progressive disclosure)
 11. Agent-Native Design (action parity, tools as primitives)
+12. Session Lifecycle Hooks (crash-safe ephemeral data, heartbeat pattern)
+
+## Session Lifecycle Hooks (Convention 12)
+
+Agent sessions produce ephemeral data (session state, decision logs, snapshots) that should not be committed to git but must survive crashes and be available on other machines.
+
+### How it works
+
+1. **`data_dir`** in `config.local.yaml` points to a persistent, file-synced folder (e.g., Dropbox, iCloud, OneDrive). Each skill writes to `<data_dir>/<skill-name>/`.
+
+2. **SessionStart hook** checks for a `.heartbeat` file. If one exists, the previous session crashed and the user is warned. A new heartbeat is written.
+
+3. **SessionEnd hook** flushes any `/tmp/<repo-name>-session/<skill-name>/` artifacts to the persistent `data_dir`, then clears the heartbeat.
+
+### Data directory layout
+
+```
+<data_dir>/
+  .heartbeat                        # crash detection marker
+  example-skill/
+    session-20260307.md             # session state
+    decisions.md                    # accumulated decision log
+```
+
+### Writing skill artifacts during a session
+
+Skills should write intermediate artifacts to `/tmp/<repo-name>-session/<skill-name>/` during the session. The SessionEnd hook automatically copies these to the persistent `data_dir`. This keeps `/tmp` fast for scratch work while ensuring nothing is lost.
+
+For artifacts that must survive even mid-session crashes, write directly to `<data_dir>/<skill-name>/` instead of `/tmp`.
+
+### Reproducibility guarantee
+
+A fresh clone of the repo, combined with the synced `data_dir`, gives a fully operational agent with no information loss. Git history stays clean (no ephemeral state committed), while the file-synced folder handles persistence and cross-machine availability.
 
 ## References
 
