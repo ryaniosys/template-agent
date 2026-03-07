@@ -24,6 +24,13 @@
 | `refactor/` | Refactoring |
 | `docs/` | Documentation |
 
+### Git Hooks
+
+After cloning, install the pre-push hook to block direct pushes to `main`:
+```bash
+ln -sf ../../scripts/hooks/pre-push .git/hooks/pre-push
+```
+
 ## Updating Documentation & Instructions
 
 When updating skill instructions, style guides, or AGENTS.md based on learnings:

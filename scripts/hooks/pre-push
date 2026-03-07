@@ -1,0 +1,9 @@
+#!/bin/bash
+# Block direct pushes to main — all changes must go through PRs.
+
+while read local_ref local_sha remote_ref remote_sha; do
+    if [ "$remote_ref" = "refs/heads/main" ]; then
+        echo "ERROR: Direct push to main is blocked. Create a PR instead."
+        exit 1
+    fi
+done
