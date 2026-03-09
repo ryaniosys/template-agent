@@ -134,6 +134,24 @@ Session hooks (`.claude/hooks.json`) manage ephemeral skill data:
 
 The `data_dir` is configured in `config.local.yaml`. Point it to a file-synced folder for cross-machine availability. See the README for the full pattern.
 
+## Agent Memory (Project-Based Agents)
+
+For agents that work on client projects or engagements with a `{project_folder}`, maintain a `_agent_memory.md` file at the project root:
+
+```
+{project_folder}/
+  _agent_memory.md    # Engagement state, open items, key context
+  ...phase artifacts...
+```
+
+**Convention:**
+- **Read** at session start to resume context
+- **Update** after completing a phase or when open items change
+- **Never commit to git** — lives in the project folder (synced externally via Nextcloud, iCloud, etc.)
+- Prefix with `_` so it sorts to the top and is clearly agent-managed
+
+This complements the session lifecycle hooks: hooks handle ephemeral session data, while `_agent_memory.md` tracks durable engagement state that must survive across sessions, machines, and crashes.
+
 ## Quick Reference
 
 | File | Purpose |

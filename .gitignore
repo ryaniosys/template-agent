@@ -9,9 +9,8 @@
 config.local.yaml
 *.local.*
 
-# Plans (ephemeral)
-plans/
-!plans/.gitkeep
+# Plans — tracked on feature branches (use .gitkeep to preserve empty dir)
+!plans/
 
 # Python
 __pycache__/

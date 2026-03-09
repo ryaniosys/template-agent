@@ -97,7 +97,7 @@ All user-specific values follow the same pattern: a committed template documenti
 
 ## Conventions
 
-This template follows the 11 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
+This template follows the 13 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
 
 1. Instruction Architecture (`CLAUDE.md → @AGENTS.md`)
 2. Security & Privacy (hard-deny + defense in depth)
@@ -111,6 +111,7 @@ This template follows the 11 conventions documented in the [agent-atlas best-pra
 10. Documentation Hygiene (sharding, progressive disclosure)
 11. Agent-Native Design (action parity, tools as primitives)
 12. Session Lifecycle Hooks (crash-safe ephemeral data, heartbeat pattern)
+13. Agent Memory (persistent engagement state in project folders)
 
 ## Session Lifecycle Hooks (Convention 12)
 
@@ -143,6 +144,22 @@ For artifacts that must survive even mid-session crashes, write directly to `<da
 ### Reproducibility guarantee
 
 A fresh clone of the repo, combined with the synced `data_dir`, gives a fully operational agent with no information loss. Git history stays clean (no ephemeral state committed), while the file-synced folder handles persistence and cross-machine availability.
+
+## Agent Memory (Convention 13)
+
+For project-based agents that work on engagements with a `{project_folder}`, maintain a `_agent_memory.md` at the project root to track durable engagement state.
+
+```
+{project_folder}/
+  _agent_memory.md    # Engagement state, open items, key context
+```
+
+- **Read** at session start to resume context
+- **Update** after completing a phase or when open items change
+- **Never commit to git** — lives in the project folder, synced externally
+- Prefix with `_` so it sorts to the top and is clearly agent-managed
+
+This complements Convention 12: session hooks handle ephemeral data within a session, while `_agent_memory.md` tracks state that must survive across sessions and machines (e.g., which phase is complete, what's pending, key decisions made).
 
 ## References
 
