@@ -43,6 +43,65 @@ resolve_data_dir() {
 }
 
 # ---------------------------------------------------------------------------
+# Resolve memory_backup_dir from config.local.yaml
+# ---------------------------------------------------------------------------
+resolve_memory_backup_dir() {
+    local mem_dir=""
+
+    if [ -f "$CONFIG_FILE" ]; then
+        mem_dir=$(grep -E '^\s*memory_backup_dir\s*:' "$CONFIG_FILE" \
+            | head -1 \
+            | sed 's/^[^:]*:\s*//' \
+            | sed 's/^["'"'"']//' \
+            | sed 's/["'"'"']$//' \
+            | sed 's/\s*#.*//' \
+            | xargs)
+    fi
+
+    # Expand ~ to $HOME
+    mem_dir="${mem_dir/#\~/$HOME}"
+
+    echo "$mem_dir"
+}
+
+# ---------------------------------------------------------------------------
+# Ensure Claude Code memory dir is symlinked to backup location
+# ---------------------------------------------------------------------------
+ensure_memory_symlink() {
+    local backup_dir
+    backup_dir="$(resolve_memory_backup_dir)"
+
+    # Skip if not configured
+    if [ -z "$backup_dir" ]; then
+        return
+    fi
+
+    # Derive the Claude Code project dir name from the repo path
+    # ~/.claude/projects/ encodes paths: / and _ replaced with -
+    local project_name
+    project_name=$(echo "$REPO_ROOT" | tr '/_' '--')
+    local memory_dir="$HOME/.claude/projects/${project_name}/memory"
+    local target_dir="${backup_dir}/${project_name}"
+
+    # Already a symlink — nothing to do
+    if [ -L "$memory_dir" ]; then
+        return
+    fi
+
+    mkdir -p "$target_dir"
+
+    # If memory dir exists with files, move them to backup first
+    if [ -d "$memory_dir" ]; then
+        cp -a "$memory_dir"/* "$target_dir/" 2>/dev/null || true
+        rm -rf "$memory_dir"
+    fi
+
+    # Create symlink
+    ln -s "$target_dir" "$memory_dir"
+    echo "Memory backed up: ${memory_dir} -> ${target_dir}"
+}
+
+# ---------------------------------------------------------------------------
 # SessionStart: check for stale heartbeat, write new one
 # ---------------------------------------------------------------------------
 session_start() {
@@ -50,6 +109,9 @@ session_start() {
     data_dir="$(resolve_data_dir)"
 
     mkdir -p "$data_dir"
+
+    # Ensure memory backup symlink
+    ensure_memory_symlink
 
     local heartbeat="${data_dir}/.heartbeat"
 
