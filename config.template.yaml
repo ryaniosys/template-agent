@@ -21,6 +21,12 @@ paths:
 # Structure: <data_dir>/<skill-name>/session-YYYYMMDD.md, decisions.md, etc.
 data_dir: # ~/Documents/my-agent-data
 
+# Claude Code memory backup directory.
+# Auto-memory files (~/.claude/projects/*/memory/) are local-only by default.
+# Set this to a file-synced folder to back them up via symlink.
+# On SessionStart, the hook will symlink the project's memory dir here.
+memory_backup_dir: # ~/Documents/personal/it/claude-memory
+
 # Integration toggles
 integrations:
   # hubspot: false

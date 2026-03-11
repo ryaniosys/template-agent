@@ -141,6 +141,16 @@ Skills should write intermediate artifacts to `/tmp/<repo-name>-session/<skill-n
 
 For artifacts that must survive even mid-session crashes, write directly to `<data_dir>/<skill-name>/` instead of `/tmp`.
 
+### Memory backup
+
+Claude Code stores auto-memory files in `~/.claude/projects/*/memory/` which is local-only and not backed up. Set `memory_backup_dir` in `config.local.yaml` to automatically symlink each project's memory dir to a file-synced folder:
+
+```yaml
+memory_backup_dir: ~/Documents/personal/it/claude-memory
+```
+
+On the first SessionStart after configuration, the hook moves existing memory files and creates a symlink. Subsequent sessions are no-ops (symlink already exists).
+
 ### Reproducibility guarantee
 
 A fresh clone of the repo, combined with the synced `data_dir`, gives a fully operational agent with no information loss. Git history stays clean (no ephemeral state committed), while the file-synced folder handles persistence and cross-machine availability.
