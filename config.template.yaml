@@ -27,6 +27,13 @@ data_dir: # ~/Documents/my-agent-data
 # On SessionStart, the hook will symlink the project's memory dir here.
 memory_backup_dir: # ~/Documents/personal/it/claude-memory
 
+# Backup directory for non-git config files.
+# When the PostToolUse hook is enabled (see .claude/hooks.json), any file
+# Claude edits that matches a watched path is copied here automatically.
+# Point to a file-synced folder so backups survive machine loss.
+# Uncomment PostToolUse in hooks.json and configure paths in hook_sync_to_backup.sh.
+backup_dir: # ~/Documents/personal/it/config-backup
+
 # Integration toggles
 integrations:
   # hubspot: false
