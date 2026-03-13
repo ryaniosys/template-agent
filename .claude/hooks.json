@@ -12,5 +12,15 @@
         "description": "Flush ephemeral artifacts to data_dir and clear heartbeat"
       }
     ]
-  }
+  },
+  "_comment_PostToolUse": "Uncomment to enable automatic backup of non-git config files on edit",
+  "_PostToolUse": [
+    {
+      "command": "bash scripts/hook_sync_to_backup.sh",
+      "description": "Back up edited config files to backup_dir",
+      "matcher": {
+        "tool_name": "Write|Edit"
+      }
+    }
+  ]
 }

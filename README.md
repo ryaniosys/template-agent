@@ -46,6 +46,7 @@ Cookiecutter template for Claude Code agent repositories. Distills patterns from
 | `.gitignore` | Comprehensive ignore rules (secrets, data, caches) |
 | `scripts/run_in_venv.sh` | Python venv runner (auto-creates `/tmp/{repo}-venv`) |
 | `scripts/hook_session_lifecycle.sh` | Session lifecycle hook (heartbeat + flush) |
+| `scripts/hook_sync_to_backup.sh` | PostToolUse hook for config file backup (opt-in) |
 | `.claude/hooks.json` | SessionStart/SessionEnd hook configuration |
 | `instructions/INSTRUCTIONS.md` | Detailed workflow docs (progressive disclosure layer 2) |
 | `docs/solutions/` | Knowledge base scaffold with category structure |
@@ -97,7 +98,7 @@ All user-specific values follow the same pattern: a committed template documenti
 
 ## Conventions
 
-This template follows the 13 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
+This template follows the 14 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
 
 1. Instruction Architecture (`CLAUDE.md → @AGENTS.md`)
 2. Security & Privacy (hard-deny + defense in depth)
@@ -112,6 +113,7 @@ This template follows the 13 conventions documented in the [agent-atlas best-pra
 11. Agent-Native Design (action parity, tools as primitives)
 12. Session Lifecycle Hooks (crash-safe ephemeral data, heartbeat pattern)
 13. Agent Memory (persistent engagement state in project folders)
+14. Config File Backup (PostToolUse hook syncs non-git configs to backup dir)
 
 ## Session Lifecycle Hooks (Convention 12)
 
@@ -154,6 +156,18 @@ On the first SessionStart after configuration, the hook moves existing memory fi
 ### Reproducibility guarantee
 
 A fresh clone of the repo, combined with the synced `data_dir`, gives a fully operational agent with no information loss. Git history stays clean (no ephemeral state committed), while the file-synced folder handles persistence and cross-machine availability.
+
+## Config File Backup (Convention 14)
+
+Agent setups often depend on config files outside git: custom shell scripts in `~/.local/bin/`, global Claude skills, dotfiles. These aren't version-controlled but are painful to recreate if lost.
+
+The `hook_sync_to_backup.sh` PostToolUse hook watches for Write/Edit operations on configured paths and copies the file to a persistent, file-synced backup directory. To enable:
+
+1. Set `backup_dir` in `config.local.yaml`
+2. Rename `_PostToolUse` to `PostToolUse` in `.claude/hooks.json`
+3. Edit `scripts/hook_sync_to_backup.sh` to add your watched paths
+
+The `~/.local/bin/*` pattern is included by default (catches any custom script Claude edits). Additional patterns for Claude skills, hooks, and kitty configs are included as commented-out examples.
 
 ## Agent Memory (Convention 13)
 
