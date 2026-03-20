@@ -49,6 +49,31 @@ When updating skill instructions, style guides, or AGENTS.md based on learnings:
 
 The committed `settings.json` hard-blocks `.env` file reads. Add your repo-specific permissions (MCP tool allows, directory access, etc.) to `settings.local.json`.
 
+## Instruction Architecture
+
+Instructions use three tiers for context window efficiency:
+
+| Tier | Location | When loaded | Use for |
+|------|----------|-------------|---------|
+| 1. Hot path | `AGENTS.md` | Every session | Rules that prevent mistakes |
+| 2. Conditional | `.claude/rules/*.md` | When matching files are touched | Integration-specific details |
+| 3. On-demand | `instructions/*.md` | When Claude reads them | Reference material, deep-dive docs |
+
+**`.claude/rules/`** files use YAML frontmatter with `paths` globs to scope when they load:
+
+```markdown
+---
+description: HubSpot integration details
+paths:
+  - "scripts/hubspot_client.py"
+  - ".claude/skills/create-quote/**"
+---
+```
+
+Without `paths`, a rule loads every session (same as AGENTS.md). See `.claude/rules/example-integration.md` for a template.
+
+<!-- CUSTOMIZE: Move integration-specific details (API IDs, service quirks, routing rules) from AGENTS.md to .claude/rules/ as your agent grows. Target: AGENTS.md under 200 lines. -->
+
 ## Data Privacy
 
 **NEVER read `.env`, `.env.mcp`, or any file containing secrets/tokens.** If the user needs to edit these files, open them with `xdg-open` so the user can edit manually. Reading secrets into conversation context exposes them irreversibly.
@@ -157,6 +182,7 @@ This complements the session lifecycle hooks: hooks handle ephemeral session dat
 | File | Purpose |
 |------|---------|
 | `config.local.yaml` | User-specific settings (gitignored) |
+| `.claude/rules/*.md` | Path-scoped conditional rules |
 | `.claude/hooks.json` | Session lifecycle hooks (heartbeat, flush) |
 | `.env` | API keys and secrets (gitignored) |
 | `.mcp.json` | MCP server configurations |
