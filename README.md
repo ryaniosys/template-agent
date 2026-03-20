@@ -40,6 +40,7 @@ Cookiecutter template for Claude Code agent repositories. Distills patterns from
 | `PRD.md` | Product vision and roadmap template |
 | `.claude/settings.json` | Hard-deny rules blocking secret file reads (committed, shared) |
 | `.claude/settings.local.json` | User-specific allows/denies (gitignored, create your own) |
+| `.claude/rules/example-integration.md` | Path-scoped conditional rule template (loaded only when matching files are touched) |
 | `.claude/skills/example-skill/` | Annotated skill template with all standard sections |
 | `config.template.yaml` | Configurable settings schema |
 | `.env.example` | Environment variable template |
@@ -76,15 +77,18 @@ Precedence: **local > project > global**. This template uses:
 - **`.claude/settings.json`** (committed) — shared deny rules that protect secrets. Every clone gets these.
 - **`.claude/settings.local.json`** (gitignored) — your personal allow/deny rules, MCP server toggles, additional directories. Claude Code auto-adds this to `.gitignore` on creation.
 
-### Progressive disclosure
+### Three-tier instruction loading
 
-Instructions are layered for context window efficiency:
+Instructions are layered for context window efficiency. Anthropic recommends [keeping instruction files under 200 lines](https://code.claude.com/docs/en/best-practices) — longer files dilute high-value rules.
 
 ```
-AGENTS.md            → Skim (always loaded, key reference tables)
-instructions/*.md    → Read (detailed workflows, loaded on demand)
-docs/solutions/*     → Deep dive (problem → solution knowledge base)
+AGENTS.md              → Hot path (always loaded, behavioral rules)
+.claude/rules/*.md     → Conditional (loaded when matching files are touched)
+instructions/*.md      → On-demand (Claude reads these when needed)
+docs/solutions/*       → Deep dive (problem → solution knowledge base)
 ```
+
+**`.claude/rules/`** uses YAML frontmatter with `paths` globs to scope when rules load. Without `paths`, a rule loads every session. This lets you keep AGENTS.md lean while ensuring integration-specific details (API IDs, service quirks, routing rules) are available when Claude works with those files. See [Claude Code Memory docs](https://code.claude.com/docs/en/memory) for full syntax.
 
 ### Template-to-local config
 
@@ -98,7 +102,7 @@ All user-specific values follow the same pattern: a committed template documenti
 
 ## Conventions
 
-This template follows the 14 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
+This template follows the 15 conventions documented in the [agent-atlas best-practices blueprint](https://github.com/ryaniosys/agent-atlas/blob/main/blueprints/best-practices.md):
 
 1. Instruction Architecture (`CLAUDE.md → @AGENTS.md`)
 2. Security & Privacy (hard-deny + defense in depth)
@@ -114,6 +118,7 @@ This template follows the 14 conventions documented in the [agent-atlas best-pra
 12. Session Lifecycle Hooks (crash-safe ephemeral data, heartbeat pattern)
 13. Agent Memory (persistent engagement state in project folders)
 14. Config File Backup (PostToolUse hook syncs non-git configs to backup dir)
+15. Conditional Rules (`.claude/rules/` with path-scoped loading for context efficiency)
 
 ## Session Lifecycle Hooks (Convention 12)
 
@@ -189,6 +194,8 @@ This complements Convention 12: session hooks handle ephemeral data within a ses
 
 Official Claude Code docs and community guides that informed these patterns:
 
+- [Claude Code Best Practices](https://code.claude.com/docs/en/best-practices) — instruction file size limits, context efficiency
+- [Claude Code Memory & Rules](https://code.claude.com/docs/en/memory) — `@imports`, `.claude/rules/`, path-scoped loading
 - [Claude Code Settings](https://code.claude.com/docs/en/settings) — official settings hierarchy and permissions
 - [Claude Code Permissions Guide](https://www.eesel.ai/blog/claude-code-permissions) — allow/deny rules, precedence
 - [Settings and Permissions Deep Dive](https://deepwiki.com/FlorianBruniaux/claude-code-ultimate-guide/4.2-settings-and-permissions-files) — committed vs. local, team workflows
