@@ -130,6 +130,11 @@ source .env && /tmp/${REPO_NAME}-venv/bin/python scripts/my_script.py
 
 Run `/help` to see all available skills.
 
+<!-- CUSTOMIZE: Add 3-5 natural-language examples so users know what to ask -->
+<!-- Example:
+**Quick start:** `/task-overview`, `/prep-meeting`, `/recent-activity`
+-->
+
 <!-- CUSTOMIZE: Add skills as you create them -->
 
 | Skill | Trigger | Description |
