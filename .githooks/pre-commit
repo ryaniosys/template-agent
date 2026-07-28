@@ -1,24 +1,82 @@
 #!/usr/bin/env bash
-# Pre-commit hook: block commits containing sensitive terms
+# Pre-commit hook: block sensitive terms, and block injected agent hooks.
 # Setup: git config core.hooksPath .githooks
 
+SETTINGS=".claude/settings.json"
 DENY_FILE=".sensitive-terms"
 
-if [ ! -f "$DENY_FILE" ]; then
-  exit 0
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+
+# --- 1. Sensitive terms -------------------------------------------------------
+# Optional: the deny list is gitignored, so it is absent on a fresh clone. This
+# is deliberately not an early `exit 0` - that would make everything below it
+# inert in the common case where no .sensitive-terms file has been created yet.
+if [ -f "$DENY_FILE" ]; then
+  STAGED_DIFF=$(git diff --cached --diff-filter=ACMR -U0)
+
+  while IFS= read -r pattern; do
+    # Skip empty lines and comments
+    [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
+    if echo "$STAGED_DIFF" | grep -qiE "$pattern"; then
+      echo "ERROR: Staged changes match sensitive pattern: $pattern"
+      echo "Remove the sensitive content before committing."
+      echo "Patterns defined in $DENY_FILE"
+      exit 1
+    fi
+  done < "$DENY_FILE"
 fi
 
-STAGED_DIFF=$(git diff --cached --diff-filter=ACMR -U0)
+# --- 2. Injected agent hooks in the committed settings.json -------------------
+# Agent tooling installs itself by writing PreToolUse/UserPromptSubmit/Stop hook
+# entries into .claude/settings.json, and often leaves a settings.json.bak
+# beside it. Hooks are arbitrary code execution, and this file is committed, so
+# an injected hook ships to every clone and runs on every machine that pulls.
+#
+# Session hooks belong in .claude/hooks.json, so a "hooks" key in settings.json
+# is always either injection or a mistake.
 
-while IFS= read -r pattern; do
-  # Skip empty lines and comments
-  [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
-  if echo "$STAGED_DIFF" | grep -qiE "$pattern"; then
-    echo "ERROR: Staged changes match sensitive pattern: $pattern"
-    echo "Remove the sensitive content before committing."
-    echo "Patterns defined in $DENY_FILE"
+if printf '%s\n' "$STAGED_FILES" | grep -qx "$SETTINGS"; then
+  has_hooks=$(git show ":$SETTINGS" 2>/dev/null | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(2)          # unparseable: let the textual fallback decide
+print("yes" if isinstance(data, dict) and data.get("hooks") else "no")
+' 2>/dev/null)
+
+  # python3 missing, or the staged file is not valid JSON (e.g. a truncated
+  # write). Fall back to a textual check rather than waving it through.
+  if [ -z "$has_hooks" ]; then
+    if git show ":$SETTINGS" 2>/dev/null |
+      grep -qE '"(hooks|PreToolUse|PostToolUse|UserPromptSubmit|SessionStart|Stop)"'; then
+      has_hooks=yes
+    fi
+  fi
+
+  if [ "$has_hooks" = "yes" ]; then
+    echo "ERROR: $SETTINGS contains a \"hooks\" block."
+    echo
+    echo "Hooks are code execution, and this file is committed, so anything here"
+    echo "runs on every clone. Agent tooling installs itself this way."
+    echo
+    echo "  Inspect: git diff --cached $SETTINGS"
+    echo "  Discard: git restore --staged --worktree $SETTINGS"
+    echo
+    echo "If you genuinely intend to commit a hook, it belongs in"
+    echo ".claude/hooks.json. Override once with --no-verify."
     exit 1
   fi
-done < "$DENY_FILE"
+fi
+
+# The .bak that hook installers leave behind is never worth committing. It is
+# deliberately not gitignored: showing up as untracked is what makes an
+# unexpected rewrite of your settings visible in the first place.
+if printf '%s\n' "$STAGED_FILES" | grep -qE '^\.claude/.*\.bak$'; then
+  echo "ERROR: refusing to commit a .claude/*.bak file."
+  echo "These are backups left by tooling that rewrote your settings."
+  echo "Check what changed, then delete the .bak."
+  exit 1
+fi
 
 exit 0

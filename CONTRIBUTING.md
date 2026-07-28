@@ -11,13 +11,29 @@ Thanks for your interest in contributing! This guide covers the basics.
 
 ## Setup
 
-Enable the pre-commit hook that guards against accidental sensitive data leaks:
+Enable the pre-commit hook:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-This runs `.githooks/pre-commit` on each commit, checking staged changes against a local deny-list (`.sensitive-terms`). Create your own `.sensitive-terms` file with patterns to block — see the hook script for format details.
+It runs two independent checks on each commit:
+
+1. **Sensitive terms.** Staged changes are matched against a local deny-list (`.sensitive-terms`).
+   That file is gitignored, so create your own with the patterns you want blocked; see the hook
+   script for the format. If it does not exist, this check is skipped and the next one still runs.
+2. **Injected agent hooks.** Rejects a `hooks` key in the committed `.claude/settings.json`, and any
+   staged `.claude/*.bak`. Agent tooling installs itself by writing `PreToolUse` /
+   `UserPromptSubmit` / `Stop` entries into that file and leaving a `.bak` beside it. Hooks are
+   arbitrary code execution, and `settings.json` is committed, so an injected hook ships to every
+   clone. Session hooks belong in `.claude/hooks.json`. Override once with `--no-verify` if you
+   genuinely mean it.
+
+The `.bak` is deliberately **not** gitignored: it showing up as untracked in `git status` is what
+makes an unexpected rewrite of your settings visible at all.
+
+A committed hook file is not a running hook. If you skip the `core.hooksPath` step above, neither
+check ever executes.
 
 ## Branch Naming
 
