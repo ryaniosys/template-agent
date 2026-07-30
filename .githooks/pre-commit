@@ -11,7 +11,32 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
 # Optional: the deny list is gitignored, so it is absent on a fresh clone. This
 # is deliberately not an early `exit 0` - that would make everything below it
 # inert in the common case where no .sensitive-terms file has been created yet.
-if [ -f "$DENY_FILE" ]; then
+#
+# The gitignore is also why this scan silently did nothing inside a linked
+# worktree: the file exists only in the primary clone, so the -f test was false
+# and the whole block was skipped without a word. Every commit made from a
+# worktree went unscanned. So: fall back to the primary clone's copy, and if
+# there is still no deny list while .gitignore declares one, say so loudly
+# instead of passing in silence.
+
+DENY_SOURCE="$DENY_FILE"
+
+if [ ! -f "$DENY_SOURCE" ]; then
+  # In a linked worktree, --git-common-dir points at the primary clone's .git,
+  # whose parent is the primary working tree. In a normal clone it resolves to
+  # the same repo, so this lookup is harmless there.
+  COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) ||
+    COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+  if [ -n "$COMMON_DIR" ]; then
+    CANDIDATE="$(dirname "$COMMON_DIR")/$DENY_FILE"
+    if [ -f "$CANDIDATE" ]; then
+      DENY_SOURCE="$CANDIDATE"
+      echo "note: using deny list from the primary clone ($CANDIDATE)" >&2
+    fi
+  fi
+fi
+
+if [ -f "$DENY_SOURCE" ]; then
   STAGED_DIFF=$(git diff --cached --diff-filter=ACMR -U0)
 
   while IFS= read -r pattern; do
@@ -20,10 +45,22 @@ if [ -f "$DENY_FILE" ]; then
     if echo "$STAGED_DIFF" | grep -qiE "$pattern"; then
       echo "ERROR: Staged changes match sensitive pattern: $pattern"
       echo "Remove the sensitive content before committing."
-      echo "Patterns defined in $DENY_FILE"
+      echo "Patterns defined in $DENY_SOURCE"
       exit 1
     fi
-  done < "$DENY_FILE"
+  done < "$DENY_SOURCE"
+elif grep -qxF "$DENY_FILE" .gitignore 2>/dev/null; then
+  # .gitignore declaring the file means this repo uses the deny-list convention.
+  # Declared but absent is the dangerous state: the scan is inert and nothing
+  # says so. Warn on every commit. Set SENSITIVE_TERMS_REQUIRED=1 (sensible in a
+  # public repo) to make it a hard stop instead.
+  echo "WARNING: $DENY_FILE is declared in .gitignore but is not present here." >&2
+  echo "         The sensitive-terms scan did NOT run for this commit." >&2
+  echo "         Create $DENY_FILE, or scan by hand before pushing anything public." >&2
+  if [ "${SENSITIVE_TERMS_REQUIRED:-0}" = "1" ]; then
+    echo "ERROR: SENSITIVE_TERMS_REQUIRED=1 and no deny list is available." >&2
+    exit 1
+  fi
 fi
 
 # --- 2. Injected agent hooks in the committed settings.json -------------------
