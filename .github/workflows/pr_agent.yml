@@ -1,0 +1,21 @@
+name: PR-Agent (cross-family review)
+
+# Thin caller. Forwards this repo's PR events to the org-wide reusable workflow; all logic and
+# config live there (ryaniosys/.github .../workflows/pr_agent.yml), and the review rubric lives in
+# ryaniosys/pr-agent-settings/.pr_agent.toml. Gated org-wide by the PR_AGENT_ENABLED org variable.
+# To diverge from the shared rubric, commit a repo-local .pr_agent.toml (it overrides the global).
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  review:
+    uses: ryaniosys/.github/.github/workflows/pr_agent.yml@main
+    permissions:
+      id-token: write        # Infisical OIDC
+      contents: read
+      pull-requests: write
+      issues: write
